@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chat</title>
     <link rel="stylesheet" href="estilos.css">
+
     <!-- Carga el núcleo de Firebase JS SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-app.js"></script>
     <!-- Agrega el manejo de autenticación. -->
@@ -13,26 +14,30 @@
     <!-- Agrego la parte de base de datos con firestore -->
     <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-firestore.js"></script>
     <script src="js/init.js"></script>
+    <script src="http://code.jquery.com/jquery-1.9.1.js" type="text/javascript"></script>
     
-        <script>
-          var x;
-          function autoscroll(){
-              self.scrollBy(0,x)
-           }
+    
+    <script>
+      var x;
+    function autoscroll(){
+    self.scrollBy(0,x)
+    }
 
-           function playautoscroll(){
-              x = 1;
-              setInterval('autoscroll()',0.1);
-              stop();
-           }
-            function onetozero(){
-               x=0;
-            }
+    function playautoscroll(){
+    x = 1;
+    setInterval('autoscroll()',0.1);
+    stop();}
 
-            function stop(){
-               setTimeout ("onetozero()",6000);
-            }
-              window.onload=playautoscroll;
+    function onetozero(){
+    x=0;
+    }
+
+    function stop(){
+    setTimeout ("onetozero()",6000);
+    }
+    window.onload=playautoscroll;
+    
+    
     </script>
 
 
@@ -40,25 +45,24 @@
 
       div {
         border:solid 1px rgb(104, 104, 104);
-        display:inline-block;
-        margin-left:auto;
-        margin-right:auto;
-        text-align:center;
-        background-color: aquamarine;
-       }
-      b {
-           font: oblique bold 120% cursive;
+    display:inline-block;
+    margin-left:auto;
+    margin-right:auto;
+    text-align:center;
+    background-color: aquamarine;
       }
+      b {
+  font: oblique bold 120% cursive;
+}
     </style>
-  </head>
+
+ </head>
   <body>
     <h1>Chat</h1>
-    <form action="javascript:agrega();">
-      <input id="texto" type="text" required placeholder="Mensaje">
-      <button>Enviar</button>
-    </form>
+    
     <ol id="mensajes"><li><progress max="100">Cargando…</progress></li></ol>
     <script>
+    
       // @ts-check
       /** Nombre de usuario atenticado por Firebase. */
       let usuario = "";
@@ -80,6 +84,7 @@
           if (usuarioAuth && usuarioAuth.email) {
             // Usuario aceptado.
             usuario = usuarioAuth.email;
+            
             // Muestra los mensajes del chat.
             muestraMensajes();
           } else {
@@ -93,33 +98,58 @@
       /** Conexión a la base de datos. */
       // @ts-ignore
       const firestore = firebase.firestore();
+      var fecha;
       /** Agrega un usuario a la base de datos. */
+      function actualiza(){
+        fecha = new Date();
+      }
       function agrega() {
+         
+        
         /* "MENSAJE" es el nombre de la colección a la que se agregan los datos.
          * "USUARIO", "TEXTO" y "TIMESTAMP" son los nombres de los campos en el
          * documento.
          * El timestamp contiene la fecha y hora en que se agrega el registro.*/
+         var user = firebase.auth().currentUser;
+         
         firestore.collection("MENSAJE").add({
+          
+
           USUARIO: usuario,
+
+          FOTO: user.photoURL,
           // @ts-ignore
           TEXTO: texto.value.trim(),
           // @ts-ignore
-          TIMESTAMP: firebase.firestore.FieldValue.serverTimestamp()
+          FECHA: fecha
         });
+        texto.value="";
       }
       /** Muestra los mensaje almacenados en la collection "MENSAJE". Se
        * actualiza automáticamente. */
       function muestraMensajes() {
+
+
+
+
+  // The user's ID, unique to the Firebase project. Do NOT use
+                   // this value to authenticate with your backend server, if
+                   // you have one. Use User.getToken() instead.
+      
         /* Consulta que se actualiza automáticamente. Pide todos los registros
          * de la colección "MENSAJE" ordenador por el campo "TIMESTAMP" de forma
          * descendiente. */
-        firestore.collection("MENSAJE").orderBy("TIMESTAMP", "desc")
+         
+
+        firestore.collection("MENSAJE").orderBy("FECHA", "asc")
           .onSnapshot(
             /** Función que muestra los datos enviados por el servidor. Si los
              * datos cambian en el servidor, se vuelve a invocar esta función y
              * recibe los datos actualizados.
              * @param {Array} querySnapshot estructura parecida a un Array, que
              * contiene una copia de los datos en el servidor. */
+
+             
             querySnapshot => {
               // Vacía la lista con los mensajes.
               // @ts-ignore
@@ -128,18 +158,38 @@
                * El iterador "doc" es un registro de la base de datos. */
               querySnapshot.forEach(doc => {
                 // recupera los datos almacenados en el registro.
+       
+              
+               
+              //Se crea una variable de fecha que almacene los valores tridos de la BD 
+               var fecha3 = doc.data().FECHA.toDate(),
+
+                //se da formato a la fecha
+               dformat = "Enviado el "+[fecha3.getMonth()+1,
+               fecha3.getDate(),
+               fecha3.getFullYear()].join('/')+' a las '+
+              [fecha3.getHours(),
+              fecha3.getMinutes(),
+              fecha3.getSeconds()].join(':');
+
+               
                 const data = doc.data();
                 
-                var d = data.TIMESTAMP.toDate(),
-                dformat = [d.getDate(), d.getMonth()+1, d.getFullYear()].join('/')+' '+
-                          [d.getHours(),d.getMinutes(),d.getSeconds()].join(':');
                 /* Agrega un li con los datos del registro, que se codifican
                  * para evitar inyección de código. */
                 // @ts-ignore
+                
+                
                 mensajes.innerHTML += /* html */
-                  `<li><u>${cod(data.USUARIO)}</u> ${dformat}<br>${cod(data.TEXTO)}</li>`;
+                  `<li><b style=" font-family:'Roboto', sans-serif">${cod(data.TEXTO)}</b><ul></ul><br><div style="color: #040; font-style: italic">De:${cod(data.USUARIO)} <img id="avatar" alt="Avatar" width="32px" height="32px" src="${cod(data.FOTO)}"> <br>${dformat}</div></b></li>`;
+                 
               })
+              
+              
             },
+            
+
+            
             /* Función que se invoca cuando hay un error. Muestra el error. Al
              * invocar esta función la conexión se cancela. Por lo mismo, se
              * vuelve a conectar. */
@@ -150,7 +200,7 @@
             }
           )
       }
-
+      
       /** Procesa un error. Muestra el objeto en la consola y un cuadro de
        * alerta con el mensaje.
        * @param {Error} e descripción del error. */
@@ -173,5 +223,10 @@
         return (texto || "").replace(/[&<>"']/g, letra => codMap.get(letra));
       }
     </script>
+    <form action="javascript:agrega();">
+      <input id="texto" type="text" required placeholder="Mensaje" autofocus>
+      <button onclick="actualiza();" >Enviar</button onclick="actualiza()">
+      
+    </form>
   </body>
 </html>
